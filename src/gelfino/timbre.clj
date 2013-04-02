@@ -1,16 +1,19 @@
 (ns gelfino.timbre
-  "timbre appenders"
+  "A Gelf based Timbre appender" 
   (:require [taoensso.timbre :as timbre] )
   (:use 
     [clojure.string :only (join)] 
     [gelfino.client :only (connect send-> client-socket) ]))
 
 
-(def levels {:trace 1 :debug 7 :info 6 :warn 5 :error 4 :fatal 3 :unknown 1})
+(def ^{:doc "Timbre level to Gelf log level"}
+  levels {:trace 1 :debug 7 :info 6 :warn 5 :error 4 :fatal 3 :unknown 1})
 
-(def hostname (.getHostName (java.net.InetAddress/getLocalHost)))
+(def ^{:doc "Logging machine hostname"}
+  hostname (.getHostName (java.net.InetAddress/getLocalHost)))
 
-(def gelf-appender
+(def ^{:doc "A Gelf append for Timbre"}
+  gelf-appender
   {:doc       "A gelfino based appender"
    :min-level :debug
    :enabled?  true
