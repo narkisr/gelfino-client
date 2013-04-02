@@ -30,7 +30,7 @@ Using timbre appender:
 (set-config! [:appenders :gelf] gelf-appender)
 (set-config! [:shared-appender-config :gelf] {:host (log* :gelf-host)})
 ```
-
+See [api](http://narkisr.github.com/gelfino-client/index.html) docs.
 # Copyright and license
 
 Copyright [2013] [Ronen Narkis]
