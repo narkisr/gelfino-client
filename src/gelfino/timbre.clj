@@ -12,8 +12,13 @@
 
 (defmacro set-tid 
    "Sets tid for all current thread logs" 
-   [tid* body]
-  `(binding [tid ~tid*] ~body))
+   [tid* & body]
+  `(binding [tid ~tid*] ~@body))
+
+(defn get-tid []
+   "Gets current tid" 
+   tid
+  )
 
 (def ^{:doc "Timbre level to Gelf log level"}
   levels {:trace 1 :debug 7 :info 6 :warn 5 :error 4 :fatal 3 :unknown 1})
