@@ -26,7 +26,7 @@
 (def ^{:doc "Logging machine hostname"}
   hostname (.getHostName (java.net.InetAddress/getLocalHost)))
 
-(defn append-tid 
+(defn- append-tid 
    "Appends transaction id number if exists" 
    [m]
   (if tid (assoc m :_tid tid) m))
