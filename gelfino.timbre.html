@@ -3,5 +3,6 @@
 </pre><div class="public" id="var-gelf-appender"><h3>gelf-appender</h3><div class="usage"></div><pre class="doc">A Gelf append for Timbre
 </pre></div><div class="public" id="var-hostname"><h3>hostname</h3><div class="usage"></div><pre class="doc">Logging machine hostname
 </pre></div><div class="public" id="var-levels"><h3>levels</h3><div class="usage"></div><pre class="doc">Timbre level to Gelf log level
-</pre></div><div class="public" id="var-set-tid"><h3>set-tid</h3><h4 class="macro">macro</h4><div class="usage"><code>(set-tid tid* &amp; body)</code></div><pre class="doc">Sets tid for all current thread logs
+</pre></div><div class="public" id="var-set-tid"><h3>set-tid</h3><h4 class="macro">macro</h4><div class="usage"><code>(set-tid tid* &amp; body)</code></div><pre class="doc">Sets tid (transaction id) for current logs,
+this id is later used in search to track a logical transaction (in graylog2 or kibana) of a series of logs.
 </pre></div></div></body></html>
