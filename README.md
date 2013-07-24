@@ -39,7 +39,7 @@ Gelfino client has the ability to set a logicl transction accross spanning compo
 
 ```clojure
   (set-tid id 
-    
+    ; all logs with current thread will have :_tid id value    
    )
 ```
 
