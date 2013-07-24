@@ -11,7 +11,9 @@
        :dynamic true :private true} tid nil)
 
 (defmacro set-tid 
-   "Sets tid for all current thread logs" 
+   "Sets tid (transaction id) for current logs,
+    this id is later used in search to track a logical transaction (in graylog2 or kibana) of a series of logs.
+   "
    [tid* & body]
   `(binding [tid ~tid*] ~@body))
 
