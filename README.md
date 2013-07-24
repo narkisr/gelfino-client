@@ -28,9 +28,23 @@ Using timbre appender:
 (use '[taoensso.timbre :only (set-config! set-level!)])
 
 (set-config! [:appenders :gelf] gelf-appender)
-(set-config! [:shared-appender-config :gelf] {:host "graylog2"})
+(set-config! [:shared-appender-config :gelf] {:host "graylog2/kibana"})
 ```
+
 See [api](http://narkisr.github.com/gelfino-client/index.html) docs.
+
+# Transaction id (tid)
+ 
+Gelfino client has the ability to set a logicl transction accross spanning components and threads:
+
+```clojure
+  (set-tid id 
+    
+   )
+```
+
+All that is required in order to see the linear log flow of such a transaction is add _tid field to your search query.
+
 # Copyright and license
 
 Copyright [2013] [Ronen Narkis]
