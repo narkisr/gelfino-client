@@ -28,7 +28,7 @@ Using timbre appender:
 (use '[taoensso.timbre :only (set-config! set-level!)])
 
 (set-config! [:appenders :gelf] gelf-appender)
-(set-config! [:shared-appender-config :gelf] {:host (log* :gelf-host)})
+(set-config! [:shared-appender-config :gelf] {:host "graylog2"})
 ```
 See [api](http://narkisr.github.com/gelfino-client/index.html) docs.
 # Copyright and license
