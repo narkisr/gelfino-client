@@ -1,5 +1,5 @@
 (ns gelfino.client
-  "The Gelf client and protocol implementation, can be use in conjunction to logging frameworks"
+  "The Gelf client and protocol implementation, can be used in conjunction with any logging frameworks"
   (:use [cheshire.core :only [generate-string]] )
   (:import 
     (java.net InetSocketAddress DatagramSocket DatagramPacket)
@@ -11,13 +11,13 @@
     java.util.zip.GZIPOutputStream 
     java.util.Date)) 
 
-(defn max-chunk-size 
+(defn- max-chunk-size 
   ([] (max-chunk-size :lan)) 
   ([k] ({:wan 1420 :lan 8154} k)))
 
 (def ^Long port 12201)
 
-(def client-socket (atom nil))
+(def ^:private client-socket (atom nil))
 
 (def ids (atom 0)) 
 
@@ -29,17 +29,17 @@
   (reset! client-socket (DatagramSocket.))
   )
 
-(def ^{:doc "The basic gelf message form"} message-template
+(def ^{:doc "The basic gelf message form" :private true} message-template
   {:version  "1.0" :host  "" :short_message  "" :full_message  "" 
    :timestamp  0 :level  1 :facility  "" :file  "" :line  0 })
 
-(defn raw-send 
+(defn- raw-send 
   "Sending raw bytes through the socket"
   [^"[B" data to]
   (.send ^DatagramSocket @client-socket 
          (DatagramPacket. data (alength data) (InetAddress/getByName to) port)))
 
-(defn gzip 
+(defn- gzip 
   "Compresses a string" 
   [^String message]
   (with-open [bos (ByteArrayOutputStream.) stream (GZIPOutputStream. bos) ]
@@ -47,7 +47,7 @@
     (.finish stream)
     (.toByteArray bos)))
 
-(defn ++ 
+(defn- ++ 
   "Combines two byte arrays to one" 
   [^"[B" f ^"[B" s]
   (let [f-l (alength f) s-l (alength s)
@@ -57,26 +57,26 @@
     res
     ))
 
-(defn md5 
+(defn- md5 
   "An md5 hash signature on a given token"
   [token]
   (let [hash-bytes (doto (MessageDigest/getInstance "MD5") (.reset) (.update (.getBytes token)))]
     (.toString (new java.math.BigInteger 1 (.digest hash-bytes)) 16)))
 
-(defn id [] 
+(defn- id [] 
   (swap! ids inc)
   (.getBytes (String. (.substring (md5 (str @ids (.getTime (Date.)))) 0 8))))
 
-(defn chunk-range [c-size len]
+(defn- chunk-range [c-size len]
   (let [exc (into [] (interleave (range 0 len c-size) (range c-size len c-size)))]
     (partition-all 2 (conj exc (last exc) len) )))
 
-(defn header
+(defn- header
   "Forms a Gelf chunk header" 
   [i d t]
   (++ (byte-array [(byte 0x1e) (byte 0x0f)]) (++ d (byte-array [(byte i) (byte t)]))))
 
-(defn chunks 
+(defn- chunks 
   "Generates chunks out of a compressed message"
   [^"[B" comp-m]
   (let [csr (chunk-range (max-chunk-size) (alength comp-m)) d (id)]
