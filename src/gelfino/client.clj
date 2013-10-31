@@ -20,14 +20,18 @@
 (def ^:private client-socket (atom nil))
 
 (def ids (atom 0)) 
-
 (defn connect 
   "Creating a datagram udp socket"
   [] 
   (reset! ids 0)
   (when @client-socket (.close @client-socket))
-  (reset! client-socket (DatagramSocket.))
-  )
+  (reset! client-socket (DatagramSocket.)))
+
+(defn lazy-connect
+   "checks if we have a working connection and only connect if there is none" 
+   []
+   (when-not @client-socket (connect)))
+
 
 (def ^{:doc "The basic gelf message form" :private true} message-template
   {:version  "1.0" :host  "" :short_message  "" :full_message  "" 
@@ -83,10 +87,15 @@
     (map (fn [[^Long s ^Long e] i] 
            (++ (header i d (count csr)) (Arrays/copyOfRange comp-m s e))) csr (range))))
 
+(defn ts
+  "UNIX microsecond timestamp"
+  []
+  (.divide (BigDecimal.  (.getTime (Date.))) (BigDecimal. 1000)))
+
 (defn send-> 
   "Sends a message m to a Gelf server host to" 
   [to m] 
-  (let [^"[B" comp-m (gzip (generate-string (merge message-template m {:timestamp (.getTime (Date.))})))]
+  (let [^"[B" comp-m (gzip (generate-string (merge message-template m {:timestamp (ts)})))]
     (if (> (alength comp-m) (max-chunk-size))
       (doseq [c (chunks comp-m)] (raw-send c to))
       (raw-send comp-m to)))) 
@@ -95,8 +104,8 @@
   "Basic usage:"
 
   (connect) 
-  (send-> "localhost" {:short_message "i am a unicorn" :message (apply str (take 400000 (repeat "I am a unicorn")))}) 
-  (send-> "0.0.0.0" {:short_message "i am a unicorn" :message "i am a unicorn" :level 4}) 
+  (send-> "kibana" {:short_message "i am a unicorn" :message (apply str (take 400000 (repeat "I am a unicorn")))}) 
+  (dotimes [i 5] (send-> "kibana" {:short_message "i am a unicorn" :full_message "i am a unicorn too" :level 1 :facility "geflino"})) 
 
 
   (defn random-string [length]
