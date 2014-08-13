@@ -1,12 +1,12 @@
 # Intro 
-A client library for the [Gelf](https://github.com/Graylog2/graylog2-docs/wiki/GELF) protocol with a fully compliant and correct implementation (chunking works). 
+A client library for the [Gelf](http://graylog2.org/gelf#specs) protocol with a fully compliant and correct implementation (chunking works). 
 
 It has an appender implemented for [timbre](https://github.com/ptaoussanis/timbre), nothing prevents it from being used in any other logging framework. 
 
 # Usage
 
 ```clojure
-  [com.narkisr/gelfino-client "0.4.2"]
+  [com.narkisr/gelfino-client "0.7.0"]
 ```
 
 Raw client use:
