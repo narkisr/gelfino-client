@@ -20,6 +20,7 @@
 (def ^:private client-socket (atom nil))
 
 (def ids (atom 0)) 
+
 (defn connect 
   "Creating a datagram udp socket"
   [] 
@@ -34,8 +35,7 @@
 
 
 (def ^{:doc "The basic gelf message form" :private true} message-template
-  {:version  "1.0" :host  "" :short_message  "" :full_message  "" 
-   :timestamp  0 :level  1 :facility  "" :file  "" :line  0 })
+  {:version  "1.1" :host  "" :short_message  "" :full_message  "" :timestamp  0 :level  1})
 
 (defn- raw-send 
   "Sending raw bytes through the socket"
@@ -100,12 +100,14 @@
       (doseq [c (chunks comp-m)] (raw-send c to))
       (raw-send comp-m to)))) 
 
+
 (comment 
   "Basic usage:"
 
   (connect) 
-  (send-> "kibana" {:short_message "i am a unicorn" :message (apply str (take 400000 (repeat "I am a unicorn")))}) 
-  (dotimes [i 5] (send-> "kibana" {:short_message "i am a unicorn" :full_message "i am a unicorn too" :level 1 :facility "geflino"})) 
+  (send-> "192.168.3.117" 
+    {:short_message "i am a unicorn" :message (apply str (take 400000 (repeat "I am a unicorn")))}) 
+  (dotimes [i 5] (send-> "192.168.3.117" {:short_message "i am a unicorn" :full_message "i am a unicorn too" :level 1 :facility "geflino"})) 
 
 
   (defn random-string [length]

@@ -37,7 +37,7 @@
   "formats message for sending" 
   [{:keys [config level prefix throwable message] :as args}]
     (let [res  {:short_message message :full_message message 
-                :level (levels level) :facility "gelfino" :host hostname}]
+                :level (levels level) :host hostname}]
       (if throwable 
         (merge res {:error (t/stacktrace throwable) :message (.getMessage throwable)})
         res) 
