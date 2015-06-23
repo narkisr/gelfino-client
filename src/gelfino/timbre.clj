@@ -35,22 +35,17 @@
 
 (defn format-message 
   "formats message for sending" 
-  [{:keys [config level prefix throwable message] :as args}]
-    (let [res  {:short_message message :full_message message 
-                :level (levels level) :host hostname}]
-      (if throwable 
-        (merge res {:error (t/stacktrace throwable) :message (.getMessage throwable)})
-        res) 
-      ))
+  [{:keys [level ?err_ vargs_ msg_ ?ns-str hostname_ timestamp_] :as args}]
+    (let [msg (force msg_) ?err (force ?err_)
+          res  {:short_message msg :full_message msg :level (levels level) :host (force hostname)}]
+      (if ?err (merge res {:error (t/stacktrace ?err) :message (.getMessage ?err)}) res)))
 
-(def ^{:doc "A Gelf append for Timbre"}
-  gelf-appender
-  {:doc       "A gelfino based appender"
-   :min-level :debug
+(defn gelf-appender [{:keys [host]}]
+  {:min-level :debug
    :enabled?  true
    :async?    false
-   :limit-per-msecs nil 
-   :fn 
-   (fn [{:keys [ap-config] :as args}]
-     (lazy-connect)
-     (send-> (get-in ap-config [:gelf :host]) (append-tid (format-message args))))})
+   :rate-limit nil 
+   :output-fn  :inherit
+   :fn (fn [data]
+         (lazy-connect)
+         (send-> host (append-tid (format-message data))))})

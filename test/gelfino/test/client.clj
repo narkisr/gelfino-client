@@ -1,34 +1,43 @@
 (ns gelfino.test.client
   (:require 
     [cheshire.core :refer (parse-string)]
-    [clj-http.client :as client]
-    [gelfino.client :refer (connect send->)])
-  (:use midje.sweet))
+    [gelfino.client :refer (connect send->)]
+    [gelfino.timbre :refer (set-tid gelf-appender)]
+    [taoensso.timbre :refer (merge-config! set-config! set-level! refer-timbre)]
+    [clojurewerkz.elastisch.rest :as esr]
+    [clojurewerkz.elastisch.rest.document :as esd]
+    [clojurewerkz.elastisch.query :as q]
+    [clojurewerkz.elastisch.rest.response :as esrsp]
+    [clojure.pprint :as pp])
+  (:use midje.sweet)
+  (:import java.text.SimpleDateFormat java.util.Date java.util.UUID) 
+  )
 
+(refer-timbre)
 
-(def host "192.168.1.10")
+(def host "192.168.3.10")
 
-(defn query-id [id]
- (str "{\"query\": {\"filtered\": {\"query\": {\"bool\":{\"should\":[{\"query_string\":{\"query\":\"" id "\"}}]}}}}}") )
+(def url (str "http://" host ":9200"))
 
-(defn kibana-search 
-  [id]
-  (-> 
-    (client/post (str "http://" host ":9200/logstash-2014.08.13/_search") {:body (query-id id) :content-type :json })
-    :body (parse-string true) 
-    :hits :hits count))
+(defn uuid [] (.replace (str (UUID/randomUUID)) "-" ""))
 
-(defn uuid [] (str (java.util.UUID/randomUUID)))
+(defn kibana-search [id field]
+  (let [conn (esr/connect url) date (.format (SimpleDateFormat. "yyyy.MM.dd") (Date.))]
+    (get-in 
+      (esd/search conn (str "logstash-" date) "logs" :query (q/term field id)) [:hits :total])))
 
-(fact "sanity" filters
-      (let [id (uuid)] 
-        (connect) 
-        (send-> host {:short_message id :message (str "the id is" id)})
-        (client/post (str "http://" host ":9200/logstash-2014.08.13/_search") {:body all :content-type :json })
-        (Thread/sleep 1000); waiting for kibana to get updated
-        (kibana-search id) => 1
-        )
+(fact "raw send" :kibana :raw
+  (let [id (uuid)]
+    (connect) 
+    (send-> host {:short_message id :full_message (str "the id is " id)}) => nil
+    (Thread/sleep 10000); waiting for kibana to get updated
+    (kibana-search id :short_message) => 1))
 
+(fact "timbre send" :kibana :timbre
+  (let [id (uuid)]
+    (println id)
+    (merge-config! {:appenders {:gelf (gelf-appender {:host host})}})
+    (set-tid id (info "testing timbre"))
+    (Thread/sleep 10000); waiting for kibana to get updated
+    (kibana-search id :tid) => 1))
 
-
-      )
