@@ -1,4 +1,4 @@
-(defproject com.narkisr/gelfino-client "0.8.0"
+(defproject com.narkisr/gelfino-client "0.8.1"
   :description "A Gelf logging client including a timbre adapter"
   :dependencies [
      [org.clojure/clojure "1.6.0"]
