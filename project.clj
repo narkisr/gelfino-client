@@ -3,7 +3,7 @@
   :dependencies [
      [org.clojure/clojure "1.6.0"]
      [com.taoensso/timbre "4.0.1"]
-     [cheshire "5.0.2"]]
+     [cheshire "5.5.0"]]
 
   :profiles {
     :dev {
