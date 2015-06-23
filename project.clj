@@ -1,10 +1,9 @@
-(defproject com.narkisr/gelfino-client "0.7.0"
+(defproject com.narkisr/gelfino-client "0.8.0"
   :description "A Gelf logging client including a timbre adapter"
   :dependencies [
-
-        [org.clojure/clojure "1.6.0"]
-        [com.taoensso/timbre "4.0.1"]
-        [cheshire "5.0.2"]]
+     [org.clojure/clojure "1.6.0"]
+     [com.taoensso/timbre "4.0.1"]
+     [cheshire "5.0.2"]]
 
   :profiles {
     :dev {
