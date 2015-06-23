@@ -12,9 +12,13 @@
         [clj-http "1.1.2"]
         [clojurewerkz/elastisch "2.1.0"]
       ]        
+      :set-version {
+        :updates [{:path "README.md" :search-regex #"\"\d+\.\d+\.\d+\""}]
+      }
     }            
   }
   
   :plugins  [[lein-ancient "0.6.7" :exclusions [org.clojure/clojure]] 
-             [lein-tag "0.1.0"] [codox "0.8.10"] [lein-midje "3.1.3"]]
+             [lein-tag "0.1.0"] [codox "0.8.10"] [lein-midje "3.1.3"]
+             [lein-set-version "0.3.0"]]
 )

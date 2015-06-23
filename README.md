@@ -6,7 +6,7 @@ It has an appender implemented for [timbre](https://github.com/ptaoussanis/timbr
 # Usage
 
 ```clojure
-  [com.narkisr/gelfino-client "0.7.0"]
+  [com.narkisr/gelfino-client "0.8.0"]
 ```
 
 Raw client use:
