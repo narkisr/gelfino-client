@@ -95,12 +95,17 @@
 (defn ts
   "UNIX microsecond timestamp"
   []
-  (.divide (BigDecimal.  (.getTime (Date.))) (BigDecimal. 1000)))
+  (.divide (BigDecimal. (.getTime (Date.))) (BigDecimal. 1000)))
+
+(defn hash->msg
+  "Convert user hash to compressed bytes array"
+  [hsh]
+  (gzip (generate-string (merge message-template hsh {:timestamp (ts)}))))
 
 (defn send-> 
   "Sends a message m to a Gelf server host to" 
   ([to m] 
-   (let [^"[B" comp-m (gzip (generate-string (merge message-template m {:timestamp (ts)})))]
+   (let [^"[B" comp-m (hash->msg m)]
      (if (> (alength comp-m) (max-chunk-size))
        (doseq [c (chunks comp-m)] (raw-send c to))
        (raw-send comp-m to)))) 
