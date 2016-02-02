@@ -24,7 +24,7 @@
 
 (defn connect 
   "Creating a datagram udp socket"
-  [{:keys [tcp host port]}] 
+  [& {:keys [tcp host port]}] 
   (reset! ids 0)
   (when @client-socket (.close @client-socket))
   (reset! client-socket (if tcp
