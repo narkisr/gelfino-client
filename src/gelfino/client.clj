@@ -1,8 +1,9 @@
 (ns gelfino.client
   "The Gelf client and protocol implementation, can be used in conjunction with any logging frameworks"
-  (:use [cheshire.core :only [generate-string]] )
+  (:require [cheshire.core :refer [generate-string]]
+            [clojure.java.io :as io])
   (:import 
-    (java.net InetSocketAddress DatagramSocket DatagramPacket)
+    (java.net InetSocketAddress DatagramSocket DatagramPacket Socket)
     java.io.ByteArrayOutputStream 
     java.security.MessageDigest
     java.net.InetAddress
@@ -23,10 +24,12 @@
 
 (defn connect 
   "Creating a datagram udp socket"
-  [] 
+  [{:keys [tcp host port]}] 
   (reset! ids 0)
   (when @client-socket (.close @client-socket))
-  (reset! client-socket (DatagramSocket.)))
+  (reset! client-socket (if tcp
+                          (Socket. host port)
+                          (DatagramSocket.))))
 
 (defn lazy-connect
    "checks if we have a working connection and only connect if there is none" 
@@ -40,13 +43,16 @@
 (defn- raw-send 
   "Sending raw bytes through the socket"
   [^"[B" data to]
-  (.send ^DatagramSocket @client-socket 
-         (DatagramPacket. data (alength data) (InetAddress/getByName to) port)))
+  (if (= java.net.DatagramSocket (class @client-socket))
+    (.send ^DatagramSocket @client-socket 
+           (DatagramPacket. data (alength data) (InetAddress/getByName to) port))
+    (let [writer (.getOutputStream @client-socket)]
+      (.write writer data))))
 
 (defn- gzip 
   "Compresses a string" 
   [^String message]
-  (with-open [bos (ByteArrayOutputStream.) stream (GZIPOutputStream. bos) ]
+  (with-open [bos (ByteArrayOutputStream.) stream (GZIPOutputStream. bos)]
     (.write stream (.getBytes message)) 
     (.finish stream)
     (.toByteArray bos)))
@@ -58,8 +64,8 @@
         res (byte-array (+ f-l s-l))]
     (System/arraycopy f 0 res 0 f-l) 
     (System/arraycopy s 0 res f-l s-l) 
-    res
-    ))
+    res))
+    
 
 (defn- md5 
   "An md5 hash signature on a given token"
@@ -73,7 +79,7 @@
 
 (defn- chunk-range [c-size len]
   (let [exc (into [] (interleave (range 0 len c-size) (range c-size len c-size)))]
-    (partition-all 2 (conj exc (last exc) len) )))
+    (partition-all 2 (conj exc (last exc) len))))
 
 (defn- header
   "Forms a Gelf chunk header" 
