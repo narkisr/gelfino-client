@@ -46,8 +46,7 @@
   (if (= java.net.DatagramSocket (class @client-socket))
     (.send ^DatagramSocket @client-socket 
            (DatagramPacket. data (alength data) (InetAddress/getByName to) port))
-    (let [writer (.getOutputStream @client-socket)]
-      (.write writer data))))
+    (.. @client-socket (getOutputStream) (write data))))
 
 (defn- gzip 
   "Compresses a string" 
@@ -100,11 +99,12 @@
 
 (defn send-> 
   "Sends a message m to a Gelf server host to" 
-  [to m] 
-  (let [^"[B" comp-m (gzip (generate-string (merge message-template m {:timestamp (ts)})))]
-    (if (> (alength comp-m) (max-chunk-size))
-      (doseq [c (chunks comp-m)] (raw-send c to))
-      (raw-send comp-m to)))) 
+  ([to m] 
+   (let [^"[B" comp-m (gzip (generate-string (merge message-template m {:timestamp (ts)})))]
+     (if (> (alength comp-m) (max-chunk-size))
+       (doseq [c (chunks comp-m)] (raw-send c to))
+       (raw-send comp-m to)))) 
+  ([m] (send-> (.. @client-socket (getInetAddress) (getHostAddress)) m)))
 
 
 (comment 
