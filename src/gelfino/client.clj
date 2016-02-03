@@ -93,7 +93,9 @@
            (++ (header i d (count csr)) (Arrays/copyOfRange comp-m s e))) csr (range))))
 
 (defn ts
-  "UNIX microsecond timestamp"
+  "UNIX millisecond timestamp.
+   Spec: Seconds since UNIX epoch with optional decimal places for milliseconds;
+   SHOULD be set by client library. Will be set to NOW by server if absent."
   []
   (.divide (BigDecimal. (.getTime (Date.))) (BigDecimal. 1000)))
 
