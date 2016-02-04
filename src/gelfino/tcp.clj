@@ -32,7 +32,6 @@
                        (need-reconnect? s (timestamp)))
                  (reconnect s)
                  s)]
-    (prn socket)
     (update-last-operation socket)
     (-> @(.socket-atom socket)
         (.getOutputStream)
