@@ -1,5 +1,6 @@
 (ns gelfino.udp
-  (:require [gelfino.helpers :refer [msg-hash->json]])
+  (:require [gelfino.helpers :refer [msg-hash->json]]
+            [gelfino.protocol :refer [GELF]])
   (:import 
     (java.net InetSocketAddress InetAddress DatagramSocket DatagramPacket)
     (java.nio ByteBuffer channels.DatagramChannel)
@@ -10,8 +11,6 @@
     java.util.Date
     java.util.zip.GZIPOutputStream)) 
 
-(defrecord UDPSocket [socket-atom ids])
-
 (defn init-channel [host port]
   (let [r (DatagramChannel/open)]
     (.. r (socket) (bind (InetSocketAddress. 0)))
@@ -21,7 +20,8 @@
 
 (defn connect [s {:keys [host port]}]
   (when @(.socket-atom s) (.close @(.socket-atom s)))
-  (reset! (.socket-atom s) (init-channel host port)))
+  (reset! (.socket-atom s) (init-channel host port))
+  s)
 
 (defn- gzip 
   "Compresses a string" 
@@ -81,5 +81,13 @@
         [bytes-msg])))
 
 (defn send-message [s msg-hash]
-  (let [ch (generate-message s msg-hash)]
-    (doseq [chunk (generate-message s msg-hash)] (send-chunk s chunk))))
+  (doseq [chunk (generate-message s msg-hash)] (send-chunk s chunk)))
+
+(defrecord UDPSocket [socket-atom ids]
+  GELF
+    (connect [self params] (connect self params))
+    (generate-message [self msg-hash] (generate-message msg-hash))
+    (send-message [self msg-hash] (send-message self msg-hash)))
+
+(defn socket [host port]
+  (connect (UDPSocket. (atom nil) (atom 0)) {:host host :port port}))

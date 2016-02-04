@@ -8,6 +8,7 @@
                                   [clj-http "2.0.1"]
                                   [clojurewerkz/elastisch "2.2.1"]]
               
+                   :repl-options {:init-ns gelfino.core}
                    :set-version {:updates [{:path "README.md" :search-regex #"\"\d+\.\d+\.\d+\""}]}}}
   
   :plugins  [[lein-ancient "0.6.7" :exclusions [org.clojure/clojure]] 
