@@ -1,10 +1,9 @@
 (ns gelfino.timbre
   "A Gelf based Timbre appender" 
-  (:require [taoensso.timbre :as t])
-  (:use 
-    [clojure.string :only (join)] 
-    [gelfino.client :only (send-> lazy-connect)]))
-
+  (:require [taoensso.timbre :as t]
+            [clojure.string :refer [join]]
+            [gelfino.client :refer [send-> lazy-connect]]
+            [gelfino.protocol :as pr]))
 
 (def ^{:doc "A transaction id that can be used to trace back a logical log flow in central logging 
              systems like Kibana/Graylog2" 
@@ -39,6 +38,21 @@
   (let [msg (force msg_) ?err (force ?err_)
         res  {:short_message msg :full_message msg :level (levels level) :host (force hostname)}]
     (if ?err (merge res {:error (t/stacktrace ?err) :message (.getMessage ?err)}) res)))
+
+(defn appender
+  "Usage:
+    (appender {:host \"127.0.0.1\"
+               :port 12201
+               :socket-constructor gelfino.tcp/socket
+               :min-level :warn})"
+  [{:keys [host port socket-constructor min-level]}]
+  (let [socket (socket-constructor host port)]
+    {:min-level (or min-level :debug)
+     :enabled? true
+     :async? false
+     :rate-limit nil
+     :output-fn :inherit
+     :fn (fn [data] (pr/send-message socket (append-tid (format-message data))))}))
 
 (defn gelf-appender [{:keys [host min-level]}]
   {:min-level (or min-level :debug)

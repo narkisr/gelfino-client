@@ -23,3 +23,6 @@
     (reconnect [self] (udp/reconnect self))
     (generate-message [self msg-hash] (udp/generate-message self msg-hash))
     (send-message [self msg-hash] (udp/send-message self msg-hash)))
+
+(def tcp-socket tcp/socket)
+(def udp-socket udp/socket)
