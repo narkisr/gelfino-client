@@ -3,7 +3,7 @@
   (:require [cheshire.core :refer [generate-string]]
             [clojure.java.io :as io])
   (:import 
-    (java.net InetSocketAddress DatagramSocket DatagramPacket Socket)
+    (java.net InetSocketAddress DatagramSocket DatagramPacket)
     java.io.ByteArrayOutputStream 
     java.security.MessageDigest
     java.net.InetAddress
@@ -24,12 +24,10 @@
 
 (defn connect 
   "Creating a datagram udp socket"
-  [& {:keys [tcp host port]}] 
+  [] 
   (reset! ids 0)
   (when @client-socket (.close @client-socket))
-  (reset! client-socket (if tcp
-                          (Socket. host port)
-                          (DatagramSocket.))))
+  (reset! client-socket (DatagramSocket.)))
 
 (defn lazy-connect
    "checks if we have a working connection and only connect if there is none" 
@@ -43,10 +41,8 @@
 (defn- raw-send 
   "Sending raw bytes through the socket"
   [^"[B" data to]
-  (if (= java.net.DatagramSocket (class @client-socket))
-    (.send ^DatagramSocket @client-socket 
-           (DatagramPacket. data (alength data) (InetAddress/getByName to) port))
-    (.. @client-socket (getOutputStream) (write data))))
+  (.send ^DatagramSocket @client-socket 
+         (DatagramPacket. data (alength data) (InetAddress/getByName to) port)))
 
 (defn- gzip 
   "Compresses a string" 
@@ -110,8 +106,7 @@
    (let [^"[B" comp-m (hash->msg m)]
      (if (> (alength comp-m) (max-chunk-size))
        (doseq [c (chunks comp-m)] (raw-send c to))
-       (raw-send comp-m to)))) 
-  ([m] (send-> (.. @client-socket (getInetAddress) (getHostAddress)) m)))
+       (raw-send comp-m to))))) 
 
 
 (comment 
