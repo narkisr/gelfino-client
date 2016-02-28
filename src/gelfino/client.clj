@@ -1,6 +1,7 @@
 (ns gelfino.client
   "The Gelf client and protocol implementation, can be used in conjunction with any logging frameworks"
-  (:use [cheshire.core :only [generate-string]] )
+  (:require [cheshire.core :refer [generate-string]]
+            [clojure.java.io :as io])
   (:import 
     (java.net InetSocketAddress DatagramSocket DatagramPacket)
     java.io.ByteArrayOutputStream 
@@ -46,7 +47,7 @@
 (defn- gzip 
   "Compresses a string" 
   [^String message]
-  (with-open [bos (ByteArrayOutputStream.) stream (GZIPOutputStream. bos) ]
+  (with-open [bos (ByteArrayOutputStream.) stream (GZIPOutputStream. bos)]
     (.write stream (.getBytes message)) 
     (.finish stream)
     (.toByteArray bos)))
@@ -58,8 +59,8 @@
         res (byte-array (+ f-l s-l))]
     (System/arraycopy f 0 res 0 f-l) 
     (System/arraycopy s 0 res f-l s-l) 
-    res
-    ))
+    res))
+    
 
 (defn- md5 
   "An md5 hash signature on a given token"
@@ -73,7 +74,7 @@
 
 (defn- chunk-range [c-size len]
   (let [exc (into [] (interleave (range 0 len c-size) (range c-size len c-size)))]
-    (partition-all 2 (conj exc (last exc) len) )))
+    (partition-all 2 (conj exc (last exc) len))))
 
 (defn- header
   "Forms a Gelf chunk header" 
@@ -88,17 +89,24 @@
            (++ (header i d (count csr)) (Arrays/copyOfRange comp-m s e))) csr (range))))
 
 (defn ts
-  "UNIX microsecond timestamp"
+  "UNIX millisecond timestamp.
+   Spec: Seconds since UNIX epoch with optional decimal places for milliseconds;
+   SHOULD be set by client library. Will be set to NOW by server if absent."
   []
-  (.divide (BigDecimal.  (.getTime (Date.))) (BigDecimal. 1000)))
+  (.divide (BigDecimal. (.getTime (Date.))) (BigDecimal. 1000)))
+
+(defn hash->msg
+  "Convert user hash to compressed bytes array"
+  [hsh]
+  (gzip (generate-string (merge message-template hsh {:timestamp (ts)}))))
 
 (defn send-> 
   "Sends a message m to a Gelf server host to" 
-  [to m] 
-  (let [^"[B" comp-m (gzip (generate-string (merge message-template m {:timestamp (ts)})))]
-    (if (> (alength comp-m) (max-chunk-size))
-      (doseq [c (chunks comp-m)] (raw-send c to))
-      (raw-send comp-m to)))) 
+  ([to m] 
+   (let [^"[B" comp-m (hash->msg m)]
+     (if (> (alength comp-m) (max-chunk-size))
+       (doseq [c (chunks comp-m)] (raw-send c to))
+       (raw-send comp-m to))))) 
 
 
 (comment 
